@@ -2,7 +2,7 @@
 from random import *
 
 def main():
-    sfc = gen_shell_fragile_connected([1, 2, 3, 4], [4, 5, 6, 7])
+    sfc = gen_shell_fragile_connected([1, 2, 3, 4, 5], [4, 5, 6, 7, 8])
     print(sfc)
     file_out(sfc, 'out.txt', form='str')
         
@@ -160,7 +160,8 @@ def gen_branch(col, leaf):
 # leaf: endpoint of the collection
 # n: exclusive upper bound for elements of k-subsets
 # m: num elements between the root and leaf
-def gen_shell_fragile_connected(root, leaf, n=10, m=0):
+# sort: whether the sets should be sorted
+def gen_shell_fragile_connected(root, leaf, n=10, m=0, sort=True):
     k = len(root)
     
     if len(root) != len(leaf):
@@ -197,7 +198,8 @@ def gen_shell_fragile_connected(root, leaf, n=10, m=0):
     
     out.append(leaf)
     
-    sort_sets(out)
+    if sort:
+        sort_sets(out)
     
     return out
 
