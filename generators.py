@@ -4,7 +4,26 @@ from random import *
 def main():
     sfc = gen_shell_fragile_connected([1, 2, 3, 4], [4, 5, 6, 7])
     print(sfc)
+    file_out(sfc, 'out.txt', form='str')
         
+# prints the collection to a file
+# c: collection to save
+# name: name of the file
+# form: format of the collection
+def file_out(c, name, form=None):
+    f = open(name, 'w')
+
+    if form is None:
+        for s in c:
+            f.write(''.join(str(s)))
+            f.write('\n')
+            
+    elif form is 'str':
+        for s in c:
+            for e in s:
+                f.write(str(e))
+            f.write('\n')
+
 # returns the intersection of all sets in the list of sets
 # s: a list of sets
 def intrs(s):
