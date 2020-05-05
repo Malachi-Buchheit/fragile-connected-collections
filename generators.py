@@ -40,12 +40,17 @@ def gen_shell_fragile_connected(root, leaf, n=10, m=0, sort=True):
     for i in range(m):
         nks = out[i]
         while nks in out:
-            nks = gen_next_ksub(k, n, out[len(out)-1], i_elems, leaf)
+            #nks = gen_next_ksub(k, n, out[len(out)-1], i_elems, leaf)
+            nks = gen_i_ksub(k, n, out[len(out)-1])
         out.append(nks)
+        trunk.append(nks)
     
     branch = gen_branch(out, leaf)
     
-    #print("Root+Trunk:", out, "\nBranch:", branch, "\nLeaf:", leaf)
+    print("Root:", root,\
+          "\nTrunk:", trunk,\
+          "\nBranch:", branch,\
+          "\nLeaf:", leaf)
     
     for b in branch:
         out.append(b)
@@ -78,27 +83,28 @@ def gen_rand_ksub(k, n, e=None):
 # k: cardinality of the sets
 # n: exclusive upper bound for elements of k-subsets
 # s: set to intersect
-# num: number of intersections to try
-def gen_i_ksub(k, n, s, num=1):
+# num: number of intersections
+def gen_i_ksub(k, n, s, num=-1):
     out = []
-    inters_elems = intrs(s)
-        
-    if num > k:
+
+    if num == -1:
+        num = k-1
+    elif num > k:
         raise ValueError("The number of intersections requested ("+num+")"+\
               "is greater than the cardinality ("+k+").")
     elif num > len(inters_elems):
         raise ValueError("The number of intersections requested ("+num+")"+\
               "is greater "+\
               "than the possible intersections ("+len(inters_elems)+").")
-    
-    # choose a random element in the intersection of all sets
-    inters_elem = choice(inters_elems)
+
+    inters_elems = sample(s, k=num)
+    #print(s, inters_elems)
     
     for i in range(k):
-        if i == inters_elem:
-            out.append(i)
+        if s[i] in inters_elems:
+            out.append(s[i])
         else:
-            out.append(randrange(n))
+            out.append(gen_new_elem(n, s))
     
     return out
 
