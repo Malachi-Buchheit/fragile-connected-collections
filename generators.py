@@ -3,7 +3,7 @@ from random import *
 
 # O(1)
 def main():
-    sfc = gen_shell_fragile_connected([1, 2, 3, 4, 5], [4, 5, 6, 7, 8])
+    sfc = gen_shell_fragile_connected([1, 2, 3, 4, 5], [4, 5, 6, 7, 8], m=3)
     print(sfc)
     file_out(sfc, 'out.txt', form='str')
 
@@ -38,17 +38,14 @@ def gen_shell_fragile_connected(root, leaf, n=10, m=0, sort=True):
     
     trunk = []
     for i in range(m):
-        nks = out[0]
+        nks = out[i]
         while nks in out:
             nks = gen_next_ksub(k, n, out[len(out)-1], i_elems, leaf)
-        trunk.append(nks)
+        out.append(nks)
     
     branch = gen_branch(out, leaf)
     
     #print("Root+Trunk:", out, "\nBranch:", branch, "\nLeaf:", leaf)
-    
-    for t in trunk:
-        out.append(t)
     
     for b in branch:
         out.append(b)
@@ -72,7 +69,7 @@ def gen_rand_ksub(k, n, e=None):
         out.append(randrange(n))
     
     if e is not None:
-        out[randrange(len(out))] = e
+        out[randrange(len(out)-1)] = e
     
     return out
 
@@ -126,12 +123,12 @@ def intrs(s):
 def gen_next_ksub(k, n, s, e, leaf):
     out = []+s
     
-    ic = randrange(len(out))
+    ic = randrange(len(out)-1)
     while out[ic] in e:
-        ic = randrange(len(out))
+        ic = randrange(len(out)-1)
     
     while s[ic] == out[ic]:
-        out[ic] = gen_new_elem(k, n, out+leaf)
+        out[ic] = gen_new_elem(n, out+leaf)
     
     return out
 
@@ -178,7 +175,7 @@ def gen_branch(col, leaf):
     while r < len(out):
         out[r] = []+out[r-1]
     
-        for c in range(len(out[r])):
+        for c in range(len(out[r])-1):
             if out[r][c] not in needed_elems:
                 out[r][c] = choice(needed_still)
                 needed_still.remove(out[r][c])
