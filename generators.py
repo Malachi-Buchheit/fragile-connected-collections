@@ -1,51 +1,66 @@
 # MALACHI BUCHHEIT
 from random import *
 
+# O(1)
 def main():
     sfc = gen_shell_fragile_connected([1, 2, 3, 4, 5], [4, 5, 6, 7, 8])
     print(sfc)
     file_out(sfc, 'out.txt', form='str')
-        
-# prints the collection to a file
-# c: collection to save
-# name: name of the file
-# form: format of the collection
-def file_out(c, name, form=None):
-    f = open(name, 'w')
 
-    if form is None:
-        for s in c:
-            f.write(''.join(str(s)))
-            f.write('\n')
-            
-    elif form is 'str':
-        for s in c:
-            for e in s:
-                f.write(str(e))
-            f.write('\n')
-
-# returns the intersection of all sets in the list of sets
-# s: a list of sets
-def intrs(s):
-    out = s[0]
+# O()
+# generates a shell-fragile connected set randomly or from/between sets
+# root: initial element of the collection
+# leaf: endpoint of the collection
+# n: exclusive upper bound for elements of k-subsets
+# m: num elements between the root and leaf
+# sort: whether the sets should be sorted
+def gen_shell_fragile_connected(root, leaf, n=10, m=0, sort=True):
+    k = len(root)
     
-    for i in range(1, len(s)):
-        out = list(set(out) & set(s[i]))
+    if len(root) != len(leaf):
+        raise ValueError("Root and leaf do not match size.")
+    
+    if root is None:
+        root = gen_rand_ksub(k, n)
+    elif len(root) != k:
+        raise ValueError("Root "+root+" is not the right cardinality.")
+    
+    if leaf is None:
+        leaf = gen_i_ksub(k, n, [root])
+    elif len(leaf) != k:
+        raise ValueError("Root "+root+" is not the right cardinality.")
+    elif intrs([leaf]+[root]) is None:
+        raise ValueError("Root and leaf share no elements.")
+    
+    out = [root]
+    
+    i_elems = intrs([leaf]+[root])
+    
+    trunk = []
+    for i in range(m):
+        nks = out[0]
+        while nks in out:
+            nks = gen_next_ksub(k, n, out[len(out)-1], i_elems, leaf)
+        trunk.append(nks)
+    
+    branch = gen_branch(out, leaf)
+    
+    #print("Root+Trunk:", out, "\nBranch:", branch, "\nLeaf:", leaf)
+    
+    for t in trunk:
+        out.append(t)
+    
+    for b in branch:
+        out.append(b)
+    
+    out.append(leaf)
+    
+    if sort:
+        sort_sets(out)
     
     return out
 
-# returns an element which does not intersect the set
-# n: exclusive upper bound for elements of k-subsets
-# s: sets to avoid intersecting
-def gen_new_elem(n, s):
-    out = [*range(n)]
-    
-    for e in s:
-        if e in out:
-            out.remove(e)
-    
-    return choice(out)
-
+# O()
 # generates a random vector
 # k: cardinality of the set
 # n: exclusive upper bound for elements of k-subsets
@@ -61,6 +76,7 @@ def gen_rand_ksub(k, n, e=None):
     
     return out
 
+# O()
 # generates a vector which intersects a set
 # k: cardinality of the sets
 # n: exclusive upper bound for elements of k-subsets
@@ -88,7 +104,19 @@ def gen_i_ksub(k, n, s, num=1):
             out.append(randrange(n))
     
     return out
+
+# O()
+# returns the intersection of all sets in the list of sets
+# s: a list of sets
+def intrs(s):
+    out = s[0]
     
+    for i in range(1, len(s)):
+        out = list(set(out) & set(s[i]))
+    
+    return out
+
+# O()
 # generates the next step of a fragile-connected chain
 # k: cardinality of the sets
 # n: exclusive upper bound for elements of k-subsets
@@ -107,6 +135,20 @@ def gen_next_ksub(k, n, s, e, leaf):
     
     return out
 
+# O()
+# returns an element which does not intersect the set
+# n: exclusive upper bound for elements of k-subsets
+# s: sets to avoid intersecting
+def gen_new_elem(n, s):
+    out = [*range(n)]
+    
+    for e in s:
+        if e in out:
+            out.remove(e)
+    
+    return choice(out)
+
+# O()
 # this function builds the connection from the trunk to the leaf
 # col: the entire collection thus far
 # leaf: the element to reach
@@ -154,60 +196,30 @@ def gen_branch(col, leaf):
     out.remove(trunk)
     
     return out
-                
-# generates a shell-fragile connected set randomly or from/between sets
-# root: initial element of the collection
-# leaf: endpoint of the collection
-# n: exclusive upper bound for elements of k-subsets
-# m: num elements between the root and leaf
-# sort: whether the sets should be sorted
-def gen_shell_fragile_connected(root, leaf, n=10, m=0, sort=True):
-    k = len(root)
-    
-    if len(root) != len(leaf):
-        raise ValueError("Root and leaf do not match size.")
-    
-    if root is None:
-        root = gen_rand_ksub(k, n)
-    elif len(root) != k:
-        raise ValueError("Root "+root+" is not the right cardinality.")
-    
-    if leaf is None:
-        leaf = gen_i_ksub(k, n, [root])
-    elif len(leaf) != k:
-        raise ValueError("Root "+root+" is not the right cardinality.")
-    elif intrs([leaf]+[root]) is None:
-        raise ValueError("Root and leaf share no elements.")
-    
-    out = [root]
-    
-    i_elems = intrs([leaf]+[root])
-    
-    for i in range(m):
-        nks = out[0]
-        while nks in out:
-            nks = gen_next_ksub(k, n, out[len(out)-1], i_elems, leaf)
-        out.append(nks)
-    
-    branch = gen_branch(out, leaf)
-    
-    #print("Root+Trunk:", out, "\nBranch:", branch, "\nLeaf:", leaf)
-    
-    for b in branch:
-        out.append(b)
-    
-    out.append(leaf)
-    
-    if sort:
-        sort_sets(out)
-    
-    return out
 
+# O()
 # sorts a collection's sets' internals
 # c: collection
 def sort_sets(c):
     for s in c:
         s.sort()
 
-main()
+# prints the collection to a file
+# c: collection to save
+# name: name of the file
+# form: format of the collection
+def file_out(c, name, form=None):
+    f = open(name, 'w')
 
+    if form is None:
+        for s in c:
+            f.write(''.join(str(s)))
+            f.write('\n')
+            
+    elif form is 'str':
+        for s in c:
+            for e in s:
+                f.write(str(e))
+            f.write('\n')
+
+main()
