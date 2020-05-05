@@ -40,12 +40,14 @@ def gen_shell_fragile_connected(root, leaf, n=10, m=0, sort=True):
     for i in range(m):
         nks = out[i]
         while nks in out:
-            #nks = gen_next_ksub(k, n, out[len(out)-1], i_elems, leaf)
-            nks = gen_i_ksub(k, n, out[len(out)-1])
+            nks = gen_next_ksub(k, n, out[len(out)-1], i_elems, leaf)
         out.append(nks)
         trunk.append(nks)
     
     branch = gen_branch(out, leaf)
+
+    sort_sets(trunk)
+    sort_sets(branch)
     
     print("Root:", root,\
           "\nTrunk:", trunk,\
