@@ -3,7 +3,7 @@ from random import *
 
 # O(1)
 def main():
-    sfc = gen_shell_fragile_connected([1, 2, 3, 4, 5], [4, 5, 6, 7, 8], m=3)
+    sfc = gen_shell_fragile_connected([1, 2, 3, 4], [3, 5, 6, 9], m=3)
     print(sfc)
     file_out(sfc, 'out.txt', form='str')
 
@@ -12,7 +12,7 @@ def main():
 # root: initial element of the collection
 # leaf: endpoint of the collection
 # n: exclusive upper bound for elements of k-subsets
-# m: num elements between the root and leaf
+# m: num elements between the root and branch (trunk)
 # sort: whether the sets should be sorted
 def gen_shell_fragile_connected(root, leaf, n=10, m=0, sort=True):
     k = len(root)
@@ -40,7 +40,7 @@ def gen_shell_fragile_connected(root, leaf, n=10, m=0, sort=True):
     for i in range(m):
         nks = out[i]
         while nks in out:
-            nks = gen_next_ksub(k, n, out[len(out)-1], i_elems, leaf)
+            nks = gen_next_ksub(k, n, out[len(out)-1], out, i_elems, leaf)
         out.append(nks)
         trunk.append(nks)
     
@@ -61,6 +61,10 @@ def gen_shell_fragile_connected(root, leaf, n=10, m=0, sort=True):
     
     if sort:
         sort_sets(out)
+
+    print(i_elems, '***')
+    for i in range(1, len(out)):
+        print(intrs([out[0]]+[out[i]]))
     
     return out
 
@@ -111,13 +115,13 @@ def gen_i_ksub(k, n, s, num=-1):
     return out
 
 # O()
-# returns the intersection of all sets in the list of sets
-# s: a list of sets
-def intrs(s):
-    out = s[0]
+# returns the intersection of all sets in the collection
+# c: a collection
+def intrs(c):
+    out = c[0]
     
-    for i in range(1, len(s)):
-        out = list(set(out) & set(s[i]))
+    for i in range(1, len(c)):
+        out = list(set(out) & set(c[i]))
     
     return out
 
@@ -126,17 +130,19 @@ def intrs(s):
 # k: cardinality of the sets
 # n: exclusive upper bound for elements of k-subsets
 # s: the previous set
+# c: the collection thus far
 # e: the intersecting elements
 # leaf: the final set to reach overall
-def gen_next_ksub(k, n, s, e, leaf):
+def gen_next_ksub(k, n, s, c, e, leaf):
     out = []+s
+    c_inters = intrs(c)
     
-    ic = randrange(len(out)-1)
-    while out[ic] in e:
-        ic = randrange(len(out)-1)
+    i = randrange(k)
+    while out[i] in e:
+        i = randrange(k)
     
-    while s[ic] == out[ic]:
-        out[ic] = gen_new_elem(n, out+leaf)
+    while s[i] == out[i]:
+        out[i] = gen_new_elem(n, out+c[0]+leaf)
     
     return out
 
@@ -146,7 +152,7 @@ def gen_next_ksub(k, n, s, e, leaf):
 # s: sets to avoid intersecting
 def gen_new_elem(n, s):
     out = [*range(n)]
-    
+
     for e in s:
         if e in out:
             out.remove(e)
@@ -162,6 +168,7 @@ def gen_branch(col, leaf):
     out = []
     needed_elems = []
     needed_still = []
+    c_inters = intrs([col[0]]+[leaf])
     
     # identify all needed elements
     for a in leaf:
@@ -179,12 +186,11 @@ def gen_branch(col, leaf):
         out.append([])
     
     # starting from the second index, go through the remaining empty sets
-    r = 1
-    while r < len(out):
+    for r in range(1, len(out)):
         out[r] = []+out[r-1]
     
-        for c in range(len(out[r])-1):
-            if out[r][c] not in needed_elems:
+        for c in range(len(out[r])):
+            if out[r][c] not in needed_elems+c_inters:
                 out[r][c] = choice(needed_still)
                 needed_still.remove(out[r][c])
                 
@@ -196,7 +202,6 @@ def gen_branch(col, leaf):
                         raise ValueError("Cannot contruct branch."+\
                         "\n"+c+out+leaf) 
                 break
-        r += 1
     
     out.remove(trunk)
     
